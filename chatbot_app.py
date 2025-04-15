@@ -17,7 +17,8 @@ def init_session_state():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
     if "api_key" not in st.session_state:
-        st.session_state.api_key = ""
+        # Retrieve API key from secrets
+        st.session_state.api_key = st.secrets["TOGETHER_API_KEY"]
 
 # Query Together.ai API
 def query_together_api(messages: list, config: Dict[str, Any]) -> str:
@@ -45,15 +46,6 @@ def render_chat_interface(config: Dict[str, Any]):
     st.title("📚 BookBot by Publy")
     st.subheader("Your AI Assistant for Books & Self-Publishing")
 
-    # API Key input
-    with st.expander("🔑 Settings", expanded=not st.session_state.api_key):
-        st.session_state.api_key = st.text_input(
-            "Together.ai API Key",
-            type="password",
-            value=st.session_state.api_key,
-            help="Get your API key from https://api.together.ai"
-        )
-
     # Display chat history
     for msg in st.session_state.chat_history[-config["MAX_HISTORY"]:]:
         st.chat_message("You" if msg["role"] == "user" else "BookBot").markdown(msg["content"])
@@ -61,7 +53,7 @@ def render_chat_interface(config: Dict[str, Any]):
     # Chat input
     if prompt := st.chat_input(config["DEFAULT_PROMPT"]):
         if not st.session_state.api_key:
-            st.warning("Please enter your Together.ai API key")
+            st.warning("API key is missing")
             return
 
         st.session_state.chat_history.append({"role": "user", "content": prompt})
